@@ -123,6 +123,15 @@ function createApp (doc, url, cb) {
   }  
   
   app.sync = function (callback) {
+    // A few notes.
+    //   File change events are stored in an array and bundled up in to one write call., 
+    // this reduces the amount of unnecessary processing as we get a lof of change events.
+    //   The file descriptors are stored and re-used because it cuts down on the number of bad change events.
+    //   And finally, we check the md5 and only push when the document is actually been changed.
+    //   A lot of crazy workarounds for the fact that we basically get an event every time someone
+    // looks funny at the underlying files and even reading and opening fds to check on the file trigger
+    // more events.
+    
     app.push(function () {
       var changes = [];
       console.log('Watching files for changes...')
