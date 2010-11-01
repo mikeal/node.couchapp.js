@@ -1,11 +1,13 @@
 { "name" : "couchapp"
 , "description" : "Utilities for building CouchDB applications."
 , "tags" : ["couchdb", "webframework"]
-, "version" : "0.5.1"
+, "version" : "0.7.0"
 , "author" : "Mikeal Rogers <mikeal.rogers@gmail.com>"
-, "directories" :
-  { "lib" : "lib" }
 , "engines" : ["node >=0.1.95"]
-, "main" : "./lib/couchapp"
-, "bin" : {"couchapp":"./lib/bin.js"}
+, "main" : "./main"
+, "dependencies": 
+  { "watch": "*"
+  , "request": "*"
+  }
+, "bin": { "couchapp" : "./bin.js" }
 }

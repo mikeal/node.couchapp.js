@@ -1,7 +1,9 @@
-var couchapp = require('../lib/couchapp');
+var couchapp = require('../main')
+  , path = require('path')
+  ;
 
-ddoc = {"views":{}}
-exports.app = ddoc;
+ddoc = {_id:"_design/app", views:{}}
+module.exports = ddoc;
 
 ddoc.views.simple = {
   map: function (doc) {emit(doc._id, null)}
@@ -20,3 +22,5 @@ ddoc.tests = {views:{
   simpleReduce:{map:{expect:[ [{'_id':'1'}, {'_id':'2'}], [ ['1',1], ['2',1] ] ]},
                 reduce:{expect:[ [{'_id':'1'}, {'_id':'2'}], 2 ] }
 }}}
+
+couchapp.loadAttachments(ddoc, path.join(__dirname, 'modules'))
