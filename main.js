@@ -4,7 +4,7 @@ var path = require('path')
   , watch = require('watch')
   , request = require('request')
   , crypto = require('crypto')
-  , mimetypes = require('./lib/dep/mimetypes')
+  , mimetypes = require('./mimetypes')
   ;
 
 var h = {'content-type':'application/json', 'accept-type':'application/json'}
@@ -152,6 +152,7 @@ function createApp (doc, url, cb) {
             if (!change[0]) {
               delete app.doc._attachments[change[1]];
               dirty = true;
+              console.log("Removed "+change[0]);
             } else {
               pending += 1
               var checkfile = function () {
@@ -171,8 +172,10 @@ function createApp (doc, url, cb) {
                     app.doc._attachments[f] = {data:d, content_type:mime};
                     app.doc.attachments_md5[f] = {revpos:revpos + 1, md5:md5};
                     dirty = true;
-                    if (pending == 0 && dirty) push(function () {dirty = false; setTimeout(change, 50)})
+                    console.log("Changed "+change[0]);
                   }
+                  if (pending == 0 && dirty) push(function () {dirty = false; setTimeout(check, 50)})
+                  else if (pending == 0 && !dirty) setTimeout(check, 50)
                 })
               }
               if (app.fds[change[0]]) {
@@ -188,6 +191,7 @@ function createApp (doc, url, cb) {
           })
           changes = []
           if (pending == 0 && dirty) push(function () {dirty = false; setTimeout(check, 50)})
+          else if (pending == 0 && !dirty) setTimeout(check, 50)
         } else {
           setTimeout(check, 50);
         }
