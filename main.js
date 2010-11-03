@@ -58,10 +58,10 @@ function createApp (doc, url, cb) {
     var body = JSON.stringify(doc)
     console.log('PUT '+url)
     request({uri:url, method:'PUT', body:body, headers:h}, function (err, resp, body) {
-      console.log('Finished push.')
       if (err) throw err;
       if (resp.statusCode !== 201) throw new Error("Could not push document\n"+body)
       app.doc._rev = JSON.parse(body).rev
+      console.log('Finished push. '+app.doc._rev)
       request({uri:url, headers:h}, function (err, resp, body) {
         body = JSON.parse(body);
         app.doc._attachments = body._attachments;
@@ -137,7 +137,7 @@ function createApp (doc, url, cb) {
       console.log('Watching files for changes...')
       app.doc.__attachments.forEach(function (att) {
         var pre = att.root
-        if (pre[pre.length - 1] == '/') pre += '/';
+        if (pre[pre.length - 1] !== '/') pre += '/';
         watch.createMonitor(att.root, {ignoreDotFiles:true}, function (monitor) {
           monitor.on("removed", function (f, stat) {
             f = f.replace(pre, '');
@@ -164,37 +164,27 @@ function createApp (doc, url, cb) {
               console.log("Removed "+change[0]);
             } else {
               pending += 1
-              var checkfile = function () {
-                var size = change[2].size
-                  , b = new Buffer(size)
+              
+              fs.readFile(change[0], function (err, data) {
+                var f = change[1]
+                  , d = data.toString('base64')
+                  , md5 = crypto.createHash('md5')
+                  , mime = mimetypes.lookup(path.extname(f).slice(1))
                   ;
-                fs.read(app.fds[change[0]], b, 0, size, 0, function (err, blks) {
-                  var f = change[1]
-                    , d = b.toString('base64')
-                    , md5 = crypto.createHash('md5')
-                    , mime = mimetypes.lookup(path.extname(f).slice(1))
-                    ;
-                  md5.update(d)
-                  md5 = md5.digest('hex')
-                  pending -= 1
-                  if (!app.doc.attachments_md5[f] || (md5 !== app.doc.attachments_md5[f].md5) ) {
-                    app.doc._attachments[f] = {data:d, content_type:mime};
-                    app.doc.attachments_md5[f] = {revpos:revpos + 1, md5:md5};
-                    dirty = true;
-                    console.log("Changed "+change[0]);
-                  }
-                  if (pending == 0 && dirty) push(function () {dirty = false; setTimeout(check, 50)})
-                  else if (pending == 0 && !dirty) setTimeout(check, 50)
-                })
-              }
-              if (app.fds[change[0]]) {
-                checkfile()
-              } else {
-                fs.open(change[0], 'r', 0666, function (err, fd) {
-                  app.fds[change[0]] = fd;
-                  checkfile();
-                })
-              }
+
+                md5.update(d)
+                md5 = md5.digest('hex')
+                pending -= 1
+                if (!app.doc.attachments_md5[f] || (md5 !== app.doc.attachments_md5[f].md5) ) {
+                  app.doc._attachments[f] = {data:d, content_type:mime};
+                  app.doc.attachments_md5[f] = {revpos:revpos + 1, md5:md5};
+                  dirty = true;
+                  console.log("Changed "+change[0]);
+                }
+                if (pending == 0 && dirty) push(function () {dirty = false; setTimeout(check, 50)})
+                else if (pending == 0 && !dirty) setTimeout(check, 50)
+                
+              })
             }
             
           })
