@@ -5,6 +5,7 @@ var path = require('path')
   , request = require('request')
   , crypto = require('crypto')
   , mimetypes = require('./mimetypes')
+  , spawn = require('child_process').spawn
   ;
 
 var h = {'content-type':'application/json', 'accept-type':'application/json'}
@@ -24,6 +25,10 @@ function copy (obj) {
   var n = {}
   for (i in obj) n[i] = obj[i];
   return n
+}
+
+function playSound () {
+  spawn("/usr/bin/afplay", ["/System/Library/Sounds/Blow.aiff"]);
 }
   
 function createApp (doc, url, cb) {
@@ -65,6 +70,7 @@ function createApp (doc, url, cb) {
       request({uri:url, headers:h}, function (err, resp, body) {
         body = JSON.parse(body);
         app.doc._attachments = body._attachments;
+        playSound();
         if (callback) callback()
       })
     })
