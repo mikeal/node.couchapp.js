@@ -98,7 +98,7 @@ function createApp (doc, url, cb) {
                 ;
               md5.update(d)
               md5 = md5.digest('hex')
-              if (app.doc.attachments_md5[f]) {
+              if (app.doc.attachments_md5[f] && app.doc._attachments[f]) {
                 if (app.doc._attachments[f].revpos === app.doc.attachments_md5[f].revpos && 
                     app.doc.attachments_md5[f].md5 === md5) {   
                   pending -= 1
@@ -161,7 +161,7 @@ function createApp (doc, url, cb) {
             if (!change[0]) {
               delete app.doc._attachments[change[1]];
               dirty = true;
-              console.log("Removed "+change[0]);
+              console.log("Removed "+change[1]);
             } else {
               pending += 1
               

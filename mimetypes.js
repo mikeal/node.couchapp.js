@@ -34,6 +34,7 @@ exports.types = {
   "hqx":"application/mac-binhex40",
   "html":"text/html",
   "ice":"x-conference/x-cooltalk",
+  "ico":"image/x-icon",
   "ief":"image/ief",
   "igs":"model/iges",
   "ips":"application/x-ipscript",
