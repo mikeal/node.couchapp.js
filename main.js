@@ -91,7 +91,7 @@ function createApp (doc, url, cb) {
     revpos = app.doc._rev ? parseInt(app.doc._rev.slice(0,app.doc._rev.indexOf('-'))) : 0;
     
     app.doc.__attachments.forEach(function (att) {
-      watch.walk(att.root, function (err, files) {
+      watch.walk(att.root, {ignoreDotFiles:true}, function (err, files) {
         for (i in files) { (function (f) {
           pending += 1
           fs.readFile(f, function (err, data) {
