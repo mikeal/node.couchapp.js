@@ -42,6 +42,7 @@ function createApp (doc, url, cb) {
         if (i[0] != '_') {
           if (typeof x[i] == 'function') {
             x[i] = x[i].toString()
+            x[i] = 'function '+x[i].slice(x[i].indexOf('('))
           }
           if (typeof x[i] == 'object') {
             p(x[i])

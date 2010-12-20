@@ -54,19 +54,7 @@ if (command == 'boiler') {
   if (app) fs.mkdirSync(path.join(process.env.PWD, app))
   app = app || '.'
   
-  copytree(path.join(__dirname, 'boiler'), path.join(process.env.PWD, app))
-  
-  // fs.writeFileSync(
-  //   path.join(process.env.PWD, app, 'app.js'), 
-  //   fs.readFileSync(path.join(__dirname, 'sample-app.js')).toString()
-  // )
-  // 
-  // fs.mkdirSync(path.join(process.env.PWD, app, 'attachments'))
-  // fs.writeFileSync(
-  //   path.join(process.env.PWD, app, 'attachments', 'index.html'), 
-  //   fs.readFileSync(path.join(__dirname, 'sample-index.html')).toString()
-  // )
-  
+  copytree(path.join(__dirname, 'boiler'), path.join(process.env.PWD, app));
 } else {
   couchapp.createApp(require(abspath(app)), couch, function (app) {
     if (command == 'push') app.push()
