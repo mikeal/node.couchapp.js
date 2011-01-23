@@ -36,8 +36,13 @@ function copytree (source, dest) {
   watch.walk(source, function (err, files) {
     for (i in files) {
       (function (i) {
-        if (files[i].isDirectory()) fs.mkdirSync(i.replace(source, dest), 0755)
-        else {
+        if (files[i].isDirectory()) {
+          try {
+            fs.mkdirSync(i.replace(source, dest), 0755)
+          } catch(e) {
+            console.log('Could not create '+dest)
+          }
+        } else {
           fs.readFile(i, function (err, data) {
             if (err) throw err;
             fs.writeFile(i.replace(source, dest), data, function (err) {
@@ -51,7 +56,10 @@ function copytree (source, dest) {
 }
 
 if (command == 'boiler') {
-  if (app) fs.mkdirSync(path.join(process.env.PWD, app))
+  if (app) {
+    try { fs.mkdirSync(path.join(process.env.PWD, app)) }
+    catch(e) {};
+  }
   app = app || '.'
   
   copytree(path.join(__dirname, 'boiler'), path.join(process.env.PWD, app));
