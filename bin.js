@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 var couchapp = require('./main.js')
   , watch = require('watch')
   , path = require('path')
