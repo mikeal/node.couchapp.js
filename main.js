@@ -64,7 +64,7 @@ function createApp (doc, url, cb) {
     doc._attachments = copy(app.doc._attachments)
     delete doc.__attachments;
     var body = JSON.stringify(doc)
-    console.log('PUT '+url)
+    console.log('PUT '+url.replace(/^(https?:\/\/[^@:]+):[^@]+@/, '$1:******@'))
     request({uri:url, method:'PUT', body:body, headers:h}, function (err, resp, body) {
       if (err) throw err;
       if (resp.statusCode !== 201) throw new Error("Could not push document\n"+body)
