@@ -1,3 +1,5 @@
+
+
 var path = require('path')
   , sys = require('sys')
   , fs = require('fs')
@@ -206,7 +208,10 @@ function createApp (doc, url, cb) {
     })
   }
   
-  if (url.slice(url.length - doc._id.length) !== doc._id) url += '/' + doc._id;
+  var _id = doc.app ? doc.app._id : doc._id
+  
+  if (url.slice(url.length - _id.length) !== _id) url += '/' + _id;
+
   request({uri:url, headers:h}, function (err, resp, body) {
     if (err) throw err;
     if (resp.statusCode == 404) app.current = {};
