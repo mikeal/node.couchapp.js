@@ -1,5 +1,3 @@
-
-
 var path = require('path')
   , sys = require('sys')
   , fs = require('fs')
@@ -98,7 +96,7 @@ function createApp (doc, url, cb) {
         for (i in files) { (function (f) {
           pending += 1
           fs.readFile(f, function (err, data) {
-            f = f.replace(att.root, app.prefix || '');
+            f = f.replace(att.root, att.prefix || '');
             if (f[0] == '/') f = f.slice(1)
             if (!err) {
               var d = data.toString('base64')
