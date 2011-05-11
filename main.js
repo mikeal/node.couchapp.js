@@ -10,6 +10,54 @@ var path = require('path')
 
 var h = {'content-type':'application/json', 'accept-type':'application/json'}
   
+/**
+ * Recursively load directory contents into ddoc
+ *
+ * It's really convenient to see the main couchapp code in single file,
+ * rather than mapped into little files in lots of directories like
+ * the python couchapp. But there are definitely cases where we might want 
+ * to use some module or another on the server side. This addition
+ * loads file contents from a given directory (recursively) into a js 
+ * object that can be added to a design document and require()'d in 
+ * lists, shows, etc. 
+ *
+ * Use couchapp.loadFiles() in app.js like this:
+ *
+ *    ddoc = {
+ *        _id: '_design/app'
+ *      , views: {}
+ *      , ...
+ *      , templates: couchapp.loadFiles('./templates')
+ *      , lib: couchapp.loadFiles('./lib')
+ *      , vendor: couchapp.loadFiles('./vendor')
+ *    }
+ *
+ */
+
+function loadFiles(dir) {
+  var listings = fs.readdirSync(dir)
+    , obj = {};
+
+  listings.forEach(function (listing) {
+    var filepath = dir + listing
+      , dirpath = filepath + '/'
+      , prop = listing.split('.')[0] // probably want regexp or something more robust
+      , stat = fs.statSync(filepath);
+
+      if (stat.isFile()) {
+        obj[prop] = fs.readFileSync(filepath).toString();
+      } else if (stat.isDirectory()) {
+        obj[listing] = loadFiles(dirpath);
+      }
+  });
+
+  return obj;
+}
+
+/**
+ * End of patch (also see exports and end of file)
+ */
+
 function loadAttachments (doc, root, prefix) {
   doc.__attachments = doc.__attachments || []
   try {
@@ -221,3 +269,4 @@ function createApp (doc, url, cb) {
 
 exports.createApp = createApp
 exports.loadAttachments = loadAttachments
+exports.loadFiles = loadFiles
