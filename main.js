@@ -27,27 +27,63 @@ var h = {'content-type':'application/json', 'accept-type':'application/json'}
  *        _id: '_design/app'
  *      , views: {}
  *      , ...
- *      , templates: couchapp.loadFiles('./templates')
  *      , lib: couchapp.loadFiles('./lib')
  *      , vendor: couchapp.loadFiles('./vendor')
  *    }
  *
+ * Optionally, pass in operators to process file contents. For example, 
+ * generate mustache templates from jade templates.
+ *
+ * In yourapp/templates/index.jade
+ *  
+ * !!!5
+ * html
+ *   head
+ *     //- jade locals.title
+ *     title!= title
+ *   body
+ *     .item
+ *       //- mustache variable for server-side rendering
+ *       h1 {{ heading }}
+ *
+ * in yourapp/app.js
+ * var couchapp = require('couchapp')
+ *   , jade = require('jade')
+ *   , options = {
+ *       , operators: [
+ *           function renderJade (content, options) {
+ *             var compiler = jade.compile(content);
+ *             return compiler(options.locals || {});
+ *           }
+ *         ]
+ *       , locals: { title: 'Now we\'re cookin with gas!' }
+ *   };
+ *
+ * ddoc = { ... };
+ * 
+ * ddoc.templates = loadFiles(dir, options);
  */
 
-function loadFiles(dir) {
+function loadFiles(dir, options) {
   var listings = fs.readdirSync(dir)
+    , options = options || {}
     , obj = {};
 
   listings.forEach(function (listing) {
-    var filepath = dir + listing
-      , dirpath = filepath + '/'
+    var file = path.join(dir, listing)
       , prop = listing.split('.')[0] // probably want regexp or something more robust
-      , stat = fs.statSync(filepath);
+      , stat = fs.statSync(file);
 
-      if (stat.isFile()) {
-        obj[prop] = fs.readFileSync(filepath).toString();
+      if (stat.isFile()) { 
+        var content = fs.readFileSync(file).toString();
+        if (options.operators) {
+          options.operators.forEach(function (op) {
+            content = op(content, options);
+          });
+        }
+        obj[prop] = content;
       } else if (stat.isDirectory()) {
-        obj[listing] = loadFiles(dirpath);
+        obj[listing] = loadFiles(file, options);
       }
   });
 
