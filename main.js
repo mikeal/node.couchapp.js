@@ -10,6 +10,90 @@ var path = require('path')
 
 var h = {'content-type':'application/json', 'accept-type':'application/json'}
   
+/**
+ * Recursively load directory contents into ddoc
+ *
+ * It's really convenient to see the main couchapp code in single file,
+ * rather than mapped into little files in lots of directories like
+ * the python couchapp. But there are definitely cases where we might want 
+ * to use some module or another on the server side. This addition
+ * loads file contents from a given directory (recursively) into a js 
+ * object that can be added to a design document and require()'d in 
+ * lists, shows, etc. 
+ *
+ * Use couchapp.loadFiles() in app.js like this:
+ *
+ *    ddoc = {
+ *        _id: '_design/app'
+ *      , views: {}
+ *      , ...
+ *      , lib: couchapp.loadFiles('./lib')
+ *      , vendor: couchapp.loadFiles('./vendor')
+ *    }
+ *
+ * Optionally, pass in operators to process file contents. For example, 
+ * generate mustache templates from jade templates.
+ *
+ * In yourapp/templates/index.jade
+ *  
+ * !!!5
+ * html
+ *   head
+ *     //- jade locals.title
+ *     title!= title
+ *   body
+ *     .item
+ *       //- mustache variable for server-side rendering
+ *       h1 {{ heading }}
+ *
+ * in yourapp/app.js
+ * var couchapp = require('couchapp')
+ *   , jade = require('jade')
+ *   , options = {
+ *       , operators: [
+ *           function renderJade (content, options) {
+ *             var compiler = jade.compile(content);
+ *             return compiler(options.locals || {});
+ *           }
+ *         ]
+ *       , locals: { title: 'Now we\'re cookin with gas!' }
+ *   };
+ *
+ * ddoc = { ... };
+ * 
+ * ddoc.templates = loadFiles(dir, options);
+ */
+
+function loadFiles(dir, options) {
+  var listings = fs.readdirSync(dir)
+    , options = options || {}
+    , obj = {};
+
+  listings.forEach(function (listing) {
+    var file = path.join(dir, listing)
+      , prop = listing.split('.')[0] // probably want regexp or something more robust
+      , stat = fs.statSync(file);
+
+      if (stat.isFile()) { 
+        var content = fs.readFileSync(file).toString();
+        if (options.operators) {
+          options.operators.forEach(function (op) {
+            content = op(content, options);
+          });
+        }
+        obj[prop] = content;
+      } else if (stat.isDirectory()) {
+        obj[listing] = loadFiles(file, options);
+      }
+  });
+
+  return obj;
+}
+
+/**
+ * End of patch (also see exports and end of file)
+ */
+
 function loadAttachments (doc, root, prefix) {
   doc.__attachments = doc.__attachments || []
   try {
@@ -221,3 +305,4 @@ function createApp (doc, url, cb) {
 
 exports.createApp = createApp
 exports.loadAttachments = loadAttachments
+exports.loadFiles = loadFiles
