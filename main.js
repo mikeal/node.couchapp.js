@@ -1,5 +1,3 @@
-
-
 var path = require('path')
   , sys = require('sys')
   , fs = require('fs')
@@ -207,7 +205,6 @@ function createApp (doc, url, cb) {
       setTimeout(check, 50)
     })
   }
-  
   var _id = doc.app ? doc.app._id : doc._id
   
   if (url.slice(url.length - _id.length) !== _id) url += '/' + _id;
@@ -223,3 +220,4 @@ function createApp (doc, url, cb) {
 
 exports.createApp = createApp
 exports.loadAttachments = loadAttachments
+exports.bin = require('./bin')
