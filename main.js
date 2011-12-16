@@ -1,5 +1,4 @@
 var path = require('path')
-  , sys = require('sys')
   , fs = require('fs')
   , watch = require('watch')
   , request = require('request')
