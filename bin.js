@@ -8,7 +8,7 @@ var couchapp = require('./main.js')
 
 function abspath (pathname) {
   if (pathname[0] === '/') return pathname
-  return path.join(process.env.PWD, path.normalize(pathname));
+  return path.join(process.cwd(), path.normalize(pathname));
 }
 
 function copytree (source, dest) {
