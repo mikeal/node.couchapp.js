@@ -180,7 +180,7 @@ function createApp (doc, url, cb) {
         var pending_files = Object.keys(files).length;
         for (i in files) { (function (f) {
           fs.readFile(f, function (err, data) {
-            f = f.replace(att.root, att.prefix || '');
+            f = f.replace(att.root, att.prefix || '').replace(/\\/g,"/");
             if (f[0] == '/') f = f.slice(1)
             if (!err) {
               var d = data.toString('base64')
