@@ -8,11 +8,11 @@ var couchapp = require('./main.js')
 
 function abspath (pathname) {
   if (pathname[0] === '/') return pathname
-  return path.join(process.env.PWD, path.normalize(pathname));
+  return path.join(process.cwd(), path.normalize(pathname));
 }
 
 function copytree (source, dest) {
-  watch.walk(source, function (err, files) {
+  watch.walk(source, function (err  , files) {
     for (i in files) {
       (function (i) {
         if (files[i].isDirectory()) {
@@ -36,12 +36,12 @@ function copytree (source, dest) {
 
 function boiler (app) {
   if (app) {
-    try { fs.mkdirSync(path.join(process.env.PWD, app)) }
+    try { fs.mkdirSync(path.join(process.cwd(), app)) }
     catch(e) {};
   }
   app = app || '.'
 
-  copytree(path.join(__dirname, 'boiler'), path.join(process.env.PWD, app));
+  copytree(path.join(__dirname, 'boiler'), path.join(process.cwd(), app));
   
   
 }
