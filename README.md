@@ -7,6 +7,7 @@ Install npm.
 <pre>
 $ git clone repo
 $ cd node.couchapp.js
+$ npm install
 $ npm link .
 </pre>
 
