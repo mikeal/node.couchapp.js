@@ -59,8 +59,7 @@ app.js example:
     });
     send("&lt;ul id='people'>\n");
     while(row = getRow()) {
-      doc = row.doc;
-      send("\t&lt;li class='person name'>" + doc.name + "&lt;/li>\n");
+      send("\t&lt;li class='person name'>" + row.key + "&lt;/li>\n");
     }
     send("&lt;/ul>\n")
   }
@@ -69,6 +68,17 @@ app.js example:
     return {
       headers: {"Content-type": "text/html"},
       body: "&lt;h1 id='person' class='name'>" + doc.name + "&lt;/h1>\n"
+    }
+  }
+  
+  ddoc.validate_doc_update = function (newDoc, oldDoc, userCtx) {
+    function require(field, message) {
+      message = message || "Document must have a " + field;
+      if (!newDoc[field]) throw({forbidden : message});
+    };
+
+    if (newDoc.type == "person") {
+      require("name");
     }
   }
 
