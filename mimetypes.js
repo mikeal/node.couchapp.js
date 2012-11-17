@@ -1,6 +1,7 @@
 // from http://github.com/felixge/node-paperboy
 exports.types = {
   "aiff":"audio/x-aiff",
+  "appcache":"text/cache-manifest",
   "arj":"application/x-arj-compressed",
   "asf":"video/x-ms-asf",
   "asx":"video/x-ms-asx",
