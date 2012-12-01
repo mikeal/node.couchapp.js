@@ -234,7 +234,8 @@ function createApp (doc, url, cb) {
       console.log('Watching files for changes...')
       app.doc.__attachments.forEach(function (att) {
         var pre = att.root
-        if (pre[pre.length - 1] !== '/') pre += '/';
+        var slash = (process.platform === 'win32') ? '\\' : '/';
+        if (pre[pre.length - 1] !== slash) pre += slash;
         watch.createMonitor(att.root, {ignoreDotFiles:true}, function (monitor) {
           monitor.on("removed", function (f, stat) {
             f = f.replace(pre, '');
