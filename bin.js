@@ -51,8 +51,8 @@ if (process.mainModule && process.mainModule.filename === __filename) {
   var node = process.argv.shift()
     , bin = process.argv.shift()
     , command = process.argv.shift()
-    , app = process.argv.shift()
-    , couch = process.argv.shift()
+    , couch = process.argv.pop()
+    , apps = process.argv
     ;
 
   if (command == 'help' || command == undefined) {
@@ -60,7 +60,7 @@ if (process.mainModule && process.mainModule.filename === __filename) {
       [ "couchapp -- utility for creating couchapps" 
       , ""
       , "Usage:"
-      , "  couchapp <command> app.js http://localhost:5984/dbname"
+      , "  couchapp <command> app.js [app2.js, app3.js] http://localhost:5984/dbname"
       , ""
       , "Commands:"
       , "  push   : Push app once to server."
@@ -73,13 +73,16 @@ if (process.mainModule && process.mainModule.filename === __filename) {
   }
   
   if (command == 'boiler') {
-    boiler(app);
+    for (i in apps) {
+      boiler(apps[i]);
+    }
   } else {
-    couchapp.createApp(require(abspath(app)), couch, function (app) {
-      if (command == 'push') app.push()
-      else if (command == 'sync') app.sync()
-
-    })
+    for (i in apps) {
+      couchapp.createApp(require(abspath(apps[i])), couch, function (app) {
+        if (command == 'push') app.push()
+        else if (command == 'sync') app.sync()
+      })
+    }
   } 
 }
 
