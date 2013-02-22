@@ -2,7 +2,7 @@ var couchapp = require('../../main')
   , path = require('path')
   ;
 
-ddoc = {_id:"_design/app_2", views:{}}
+ddoc = {_id: "_design/app_2", views: {}}
 module.exports = ddoc;
 
 ddoc.views.simple = {
