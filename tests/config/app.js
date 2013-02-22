@@ -1,4 +1,4 @@
-var couchapp = require('../main')
+var couchapp = require('../../main')
   , path = require('path')
   ;
 

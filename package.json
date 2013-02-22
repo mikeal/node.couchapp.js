@@ -8,6 +8,8 @@
 , "dependencies": 
   { "watch": "*"
   , "request": "*"
+  , "nano": "*"
+  , "url": "*"
   }
 , "bin": { "couchapp" : "./bin.js" }
 }
