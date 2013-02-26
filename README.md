@@ -16,11 +16,17 @@ $ couchapp help
 couchapp -- utility for creating couchapps
 
 Usage:
-  couchapp &lt;command> app.js http://localhost:5984/dbname
+  couchapp &lt;command> app.js http://localhost:5984/dbname [opts]
 
 Commands:
-  push : Push app once to server.
-  sync : Push app then watch local files for changes.
+  push   : Push app once to server.
+  sync   : Push app then watch local files for changes.
+  boiler : Create a boiler project.
+  serve  : Serve couchapp from development webserver
+            you can specify some options
+            -p port  : list on port portNum [default=3000]
+            -d dir   : attachments directory [default='attachments']
+            -l       : log rewrites to couchdb [default='false']
 </pre>
 
 app.js example:
@@ -84,3 +90,15 @@ app.js example:
 
   couchapp.loadAttachments(ddoc, path.join(__dirname, '_attachments'));
 </pre>
+
+
+Local development server example.
+
+Start the server:
+
+    couchapp serve app.js http://localhost:5984/example_db -p 3000 -l -d attachments
+
+Now you can access your couchapp at http://localhost:3000/ . Code, hack and when you are
+happy with the result simply do:
+
+    couchapp push app.js http://localhost:5984/example_db

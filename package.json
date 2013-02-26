@@ -8,6 +8,8 @@
 , "dependencies": 
   { "watch": "*"
   , "request": "*"
+  , "http-proxy": "*"
+  , "connect": "*"
   }
 , "bin": { "couchapp" : "./bin.js" }
 }

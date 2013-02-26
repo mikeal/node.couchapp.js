@@ -46,7 +46,6 @@ function boiler (app) {
   
 }
 
-
 if (process.mainModule && process.mainModule.filename === __filename) {
   var node = process.argv.shift()
     , bin = process.argv.shift()
@@ -60,12 +59,17 @@ if (process.mainModule && process.mainModule.filename === __filename) {
       [ "couchapp -- utility for creating couchapps" 
       , ""
       , "Usage:"
-      , "  couchapp <command> app.js http://localhost:5984/dbname"
+      , "  couchapp <command> app.js http://localhost:5984/dbname [opts]"
       , ""
       , "Commands:"
       , "  push   : Push app once to server."
       , "  sync   : Push app then watch local files for changes."
       , "  boiler : Create a boiler project."
+      , "  serve  : Serve couchapp from development webserver"
+      , "            you can specify some options "
+      , "            -p port  : list on port portNum [default=3000]"
+      , "            -d dir   : attachments directory [default='attachments']"
+      , "            -l       : log rewrites to couchdb [default='false']"
       ]
       .join('\n')
     )
@@ -78,8 +82,95 @@ if (process.mainModule && process.mainModule.filename === __filename) {
     couchapp.createApp(require(abspath(app)), couch, function (app) {
       if (command == 'push') app.push()
       else if (command == 'sync') app.sync()
+      else if (command == 'serve') {
+        var url = require('url');
+        var port = 3000,
+            staticDir = 'attachments',
+            logDbRewrites = false;
+        var arg;
+        while(arg = process.argv.shift()){
+          if(arg == '-p'){
+            port = parseInt(process.argv.shift());
+          }
+          if(arg == '-d'){
+            staticDir = process.argv.shift();
+          }
+          if(arg == '-l'){
+            logDbRewrites = true;
+          }
+        }
+        var dbUrlObj = url.parse(couch);
 
-    })
+        var proxyPaths = {}
+        var dbPrefix = '../../';
+        for (var i in app.doc.rewrites){
+          var rw = app.doc.rewrites[i];
+          // Rewrites starting with '../../' are proxied to the database
+          if (rw.to.indexOf(dbPrefix) == 0){
+            var proxyPath = rw.from;
+            if(proxyPath[proxyPath.length -1] == '*') {
+              proxyPath = proxyPath.substring(0,proxyPath.length-1)
+            }
+            var dbPath = rw.to.substring(dbPrefix.length);
+            if(dbPath[dbPath.length - 1] == '*'){
+              dbPath = dbPath.substring(0,dbPath.length-1)
+            }
+            if(dbPath.indexOf('*') >=0 ){
+              if(logDbRewrites){
+                console.log("Don't know how to proxy '" + rw.from + "' to CouchDB at " + rw.from );
+              }
+            } else {
+              proxyPaths[proxyPath] =
+                dbUrlObj.protocol + '//' + dbUrlObj.host +
+                path.normalize(dbUrlObj.pathname + dbPath);
+                if(logDbRewrites){
+                  console.log("Proxying rewrite '" + proxyPath + "' to CouchDB at " + proxyPaths[proxyPath] );
+                }
+            }
+          }
+        }
+
+        var connect = require('connect');
+        var httpProxy = require('http-proxy'),
+            connect   = require('connect'),
+            staticDir = staticDir;
+
+        var proxy = new httpProxy.HttpProxy({
+          target: {
+            host: dbUrlObj.host,
+            hostname: dbUrlObj.hostname,
+            port: dbUrlObj.port,
+            https: dbUrlObj.protocol == 'https:',
+          }
+        });
+        var app = connect()
+          .use(connect.logger('dev'))
+          .use(connect.static(staticDir))
+          .use(function(req, res, next) {
+            for(var prefix in proxyPaths){
+              var dbPath = proxyPaths[prefix];
+              if (req.url.indexOf(prefix) === 0) {
+                var dbURL = req.url.replace(prefix,dbPath);
+                if(logDbRewrites){
+                  console.log("*** ", req.url , ' -> ', dbURL);
+                }
+                req.url = dbURL;
+                req.headers['host'] = dbUrlObj.host;
+                proxy.proxyRequest(req, res);
+                return;
+              }
+            }
+            var body = '404 Not found.\nNo static file or db route matched.';
+            res.statusCode = 404;
+            res.setHeader('Content-Length', body.length);
+            res.end(body);
+          })
+          .use(connect.errorHandler())
+          .listen(port);
+        console.log("Serving couchapp at: http://0.0.0.0:" + port +"/");
+      }
+
+    });
   } 
 }
 
