@@ -15,8 +15,12 @@ $ npm link .
 $ couchapp help
 couchapp -- utility for creating couchapps
 
-Usage:
+Usage - old style with single app.js:
   couchapp &lt;command> app.js http://localhost:5984/dbname [opts]
+
+Usage - new style with multiple app files:
+  directory based config specified by switch - multiple app files and pre- and post-processing capability)
+  couchapp -dc &lt;<command> &lt;appconfigdirectory> http://localhost:5984/dbname
 
 Commands:
   push   : Push app once to server.
@@ -27,6 +31,23 @@ Commands:
             -p port  : list on port portNum [default=3000]
             -d dir   : attachments directory [default='attachments']
             -l       : log rewrites to couchdb [default='false']
+</pre>
+
+<pre>
+Directory-based config:
+
+  -dc (directory config) switch uses multiple config files in the directory specified by &lt;appconfigdirectory>
+
+  Any file with a filename that begins with "app" will be executed.
+
+  Additionally
+
+  (i) if the app config directory contains file beforepushsync.js then this will be executed before any of the app files have run
+  (ii) if the app config directory contains file afterpushsync.js then this will be executed after all of the app files have run
+
+  beforepushsync.js and afterpushsync.js can be used to perform any before/after processing, using node.js code for example.
+
+  The sample afterpushsync.js shows lookup data being added to CouchDB after the CouchApp has been pushed.
 </pre>
 
 app.js example:
