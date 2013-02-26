@@ -86,6 +86,7 @@ if (process.mainModule && process.mainModule.filename === __filename) {
         var url = require('url');
         var port = 3000,
             staticDir = 'attachments',
+            tmpDir = '/tmp/couchapp-compile-' + process.pid,
             logDbRewrites = false;
         var arg;
         while(arg = process.argv.shift()){
@@ -133,7 +134,11 @@ if (process.mainModule && process.mainModule.filename === __filename) {
         var connect = require('connect');
         var httpProxy = require('http-proxy'),
             connect   = require('connect'),
-            staticDir = staticDir;
+            connectCompiler;
+        try{
+            connectCompiler = require('connect-compiler');
+        } catch(e) {}
+
 
         var proxy = new httpProxy.HttpProxy({
           target: {
@@ -145,8 +150,31 @@ if (process.mainModule && process.mainModule.filename === __filename) {
         });
         var app = connect()
           .use(connect.logger('dev'))
-          .use(connect.static(staticDir))
-          .use(function(req, res, next) {
+          .use(connect.static(staticDir));
+        if(connectCompiler){
+          console.log('Will compile assets with connect-assets.');
+          var ignore = [];
+          var quote = function(str) {
+            return (str+'').replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1");
+          }
+          for(var prefix in proxyPaths){
+            ignore.push(quote(prefix));
+          }
+          if(ignore.length){
+            //console.log("Asset compile ignore paths:", '^(' +  ignore.join('|') + ')');
+            ignore  = new RegExp('^(' +  ignore.join('|') + ')');
+          } else {
+            ignore = null;
+          }
+          app.use(connectCompiler({
+            enabled: ['coffee'] ,
+            src: staticDir,
+            dest: tmpDir,
+            ignore :  ignore,
+          }))
+          .use(connect.static(tmpDir));
+        }
+        app.use(function(req, res, next) {
             for(var prefix in proxyPaths){
               var dbPath = proxyPaths[prefix];
               if (req.url.indexOf(prefix) === 0) {
@@ -164,12 +192,34 @@ if (process.mainModule && process.mainModule.filename === __filename) {
             res.statusCode = 404;
             res.setHeader('Content-Length', body.length);
             res.end(body);
-          })
+           })
           .use(connect.errorHandler())
           .listen(port);
         console.log("Serving couchapp at: http://0.0.0.0:" + port +"/");
+        
+        //Cleanup the temp directory on exit
+        var cleanup = function(){
+          var rmDir = function(dirPath) {
+            try { var files = fs.readdirSync(dirPath); }
+            catch(e) { return; }
+            if (files.length > 0)
+              for (var i = 0; i < files.length; i++) {
+                var filePath = dirPath + '/' + files[i];
+                if (fs.statSync(filePath).isFile())
+                  fs.unlinkSync(filePath);
+                else
+                  rmDir(filePath);
+              }
+            fs.rmdirSync(dirPath);
+          };
+          rmDir(tmpDir);
+        };
+        process.on('exit',cleanup);
+        process.on('SIGINT',function(){
+          cleanup()
+          process.exit();
+        });
       }
-
     });
   } 
 }
