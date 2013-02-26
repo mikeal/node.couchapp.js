@@ -135,6 +135,14 @@ if (process.mainModule && process.mainModule.filename === __filename) {
     process.exit();
   }
   
+  if (couch == undefined) {
+    try {
+      couch = JSON.parse(fs.readFileSync('.couchapp.json')).couch;
+    } catch (e) {
+      // Discard exception: absent or malformed config file
+    }
+  }
+
   if (isUsingDirectoryConfig()) {
     if (command == 'boiler') {
       for (i in apps) {
