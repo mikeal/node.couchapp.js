@@ -173,13 +173,24 @@ function createApp (doc, url, cb) {
     app.doc = doc;
     app.prepare();
     revpos = app.doc._rev ? parseInt(app.doc._rev.slice(0,app.doc._rev.indexOf('-'))) : 0;
-
+    
+    var coffeeCompile;
+    var coffeExt;
+    try{
+      coffeeCompile = require('coffee-script');
+      coffeeExt = /\.(lit)?coffee$/;
+    } catch(e){}
+    
     pending_dirs = app.doc.__attachments.length;
     app.doc.__attachments.forEach(function (att) {
       watch.walk(att.root, {ignoreDotFiles:true}, function (err, files) {
         var pending_files = Object.keys(files).length;
         for (i in files) { (function (f) {
           fs.readFile(f, function (err, data) {
+            if(f.match(coffeeExt)){
+              data = new Buffer( coffeeCompile.compile(data.toString()) );
+              f = f.replace(coffeeExt,'.js');
+            }
             f = f.replace(att.root, att.prefix || '').replace(/\\/g,"/");
             if (f[0] == '/') f = f.slice(1)
             if (!err) {
