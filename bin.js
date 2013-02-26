@@ -57,8 +57,11 @@ function onAfterPushSync() {
     afterPushSyncListener.onAfterPushSync();
   }
 }
+var _isUsingDirectoryConfig;
 function isUsingDirectoryConfig() {
-  return process.argv[2].trim() === "-dc";
+  if(_isUsingDirectoryConfig != null)
+    return _isUsingDirectoryConfig;
+  return _isUsingDirectoryConfig = (process.argv[2].trim() === "-dc");
 }
 
 if (process.mainModule && process.mainModule.filename === __filename) {
