@@ -175,7 +175,7 @@ function createApp (doc, url, cb) {
     revpos = app.doc._rev ? parseInt(app.doc._rev.slice(0,app.doc._rev.indexOf('-'))) : 0;
     
     var coffeeCompile;
-    var coffeExt;
+    var coffeeExt;
     try{
       coffeeCompile = require('coffee-script');
       coffeeExt = /\.(lit)?coffee$/;
