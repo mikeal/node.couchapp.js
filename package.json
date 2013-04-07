@@ -12,6 +12,7 @@
   , "connect": "*"
   , "nano": "*"
   , "url": "*"
+  , "coffee-script": "*"
   }
 , "bin": { "couchapp" : "./bin.js" }
 }
