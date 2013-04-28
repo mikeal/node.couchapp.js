@@ -180,10 +180,10 @@ function createApp (doc, url, cb) {
       coffeeCompile = require('coffee-script');
       coffeeExt = /\.(lit)?coffee$/;
     } catch(e){}
-    
-    pending_dirs = app.doc.__attachments.length;
+
     app.doc.__attachments.forEach(function (att) {
       watch.walk(att.root, {ignoreDotFiles:true}, function (err, files) {
+        pending_dirs += 1;
         var pending_files = Object.keys(files).length;
         for (i in files) { (function (f) {
           fs.readFile(f, function (err, data) {
