@@ -111,7 +111,11 @@ function copy (obj) {
 }
 
 function playSound () {
-  spawn("/usr/bin/afplay", ["/System/Library/Sounds/Blow.aiff"]);
+  fs.exists("/usr/bin/afplay", function (exists) {
+    if (exists === true) {
+      spawn("/usr/bin/afplay", ["/System/Library/Sounds/Blow.aiff"]);
+    }
+  })
 }
   
 function createApp (doc, url, cb) {
