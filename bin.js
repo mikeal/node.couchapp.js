@@ -61,7 +61,7 @@ var _isUsingDirectoryConfig;
 function isUsingDirectoryConfig() {
   if(_isUsingDirectoryConfig != null)
     return _isUsingDirectoryConfig;
-  return _isUsingDirectoryConfig = (process.argv[2].trim() === "-dc");
+  return _isUsingDirectoryConfig = (process.argv[2] && (process.argv[2].trim() === "-dc"));
 }
 
 if (process.mainModule && process.mainModule.filename === __filename) {
