@@ -110,13 +110,6 @@ function copy (obj) {
   return n
 }
 
-function playSound () {
-  fs.exists("/usr/bin/afplay", function (exists) {
-    if (exists === true) {
-      spawn("/usr/bin/afplay", ["/System/Library/Sounds/Blow.aiff"]);
-    }
-  })
-}
   
 function createApp (doc, url, cb) {
   var app = {doc:doc}
@@ -157,7 +150,6 @@ function createApp (doc, url, cb) {
       }
       app.doc._rev = JSON.parse(body).rev
       console.log('Finished push. '+app.doc._rev)
-      playSound();
       request({uri:url, headers:h}, function (err, resp, body) {
         body = JSON.parse(body);
         app.doc._attachments = body._attachments;
