@@ -110,9 +110,6 @@ function copy (obj) {
   return n
 }
 
-function playSound () {
-  spawn("/usr/bin/afplay", ["/System/Library/Sounds/Blow.aiff"]);
-}
   
 function createApp (doc, url, cb) {
   var app = {doc:doc}
@@ -148,10 +145,11 @@ function createApp (doc, url, cb) {
     console.log('PUT '+url.replace(/^(https?:\/\/[^@:]+):[^@]+@/, '$1:******@'))
     request({uri:url, method:'PUT', body:body, headers:h}, function (err, resp, body) {
       if (err) throw err;
-      if (resp.statusCode !== 201) throw new Error("Could not push document\n"+body)
+      if (resp.statusCode !== 201) {
+        throw new Error("Could not push document\nCode: " + resp.statusCode + "\n"+body);
+      }
       app.doc._rev = JSON.parse(body).rev
       console.log('Finished push. '+app.doc._rev)
-      playSound();
       request({uri:url, headers:h}, function (err, resp, body) {
         body = JSON.parse(body);
         app.doc._attachments = body._attachments;
@@ -173,13 +171,24 @@ function createApp (doc, url, cb) {
     app.doc = doc;
     app.prepare();
     revpos = app.doc._rev ? parseInt(app.doc._rev.slice(0,app.doc._rev.indexOf('-'))) : 0;
+    
+    var coffeeCompile;
+    var coffeeExt;
+    try{
+      coffeeCompile = require('coffee-script');
+      coffeeExt = /\.(lit)?coffee$/;
+    } catch(e){}
 
-    pending_dirs = app.doc.__attachments.length;
     app.doc.__attachments.forEach(function (att) {
       watch.walk(att.root, {ignoreDotFiles:true}, function (err, files) {
+        pending_dirs += 1;
         var pending_files = Object.keys(files).length;
         for (i in files) { (function (f) {
           fs.readFile(f, function (err, data) {
+            if(f.match(coffeeExt)){
+              data = new Buffer( coffeeCompile.compile(data.toString()) );
+              f = f.replace(coffeeExt,'.js');
+            }
             f = f.replace(att.root, att.prefix || '').replace(/\\/g,"/");
             if (f[0] == '/') f = f.slice(1)
             if (!err) {
@@ -234,7 +243,8 @@ function createApp (doc, url, cb) {
       console.log('Watching files for changes...')
       app.doc.__attachments.forEach(function (att) {
         var pre = att.root
-        if (pre[pre.length - 1] !== '/') pre += '/';
+        var slash = (process.platform === 'win32') ? '\\' : '/';
+        if (pre[pre.length - 1] !== slash) pre += slash;
         watch.createMonitor(att.root, {ignoreDotFiles:true}, function (monitor) {
           monitor.on("removed", function (f, stat) {
             f = f.replace(pre, '');
