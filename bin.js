@@ -242,7 +242,7 @@ function serve(app) {
   } catch(e) {}
 
 
-  var proxy = new httpProxy.HttpProxy({
+  var proxy = httpProxy.createProxyServer({
     target: {
       host: dbUrlObj.host,
       hostname: dbUrlObj.hostname,
