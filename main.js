@@ -7,7 +7,10 @@ var path = require('path')
   , spawn = require('child_process').spawn
   ;
 
-var h = {'content-type':'application/json', 'accept-type':'application/json'}
+// Common request headers
+var h = function () {
+  return JSON.parse(JSON.stringify({'content-type':'application/json', 'accept-type':'application/json'}));
+}
   
 /**
  * Recursively load directory contents into ddoc
@@ -143,14 +146,14 @@ function createApp (doc, url, cb) {
     delete doc.__attachments;
     var body = JSON.stringify(doc)
     console.log('PUT '+url.replace(/^(https?:\/\/[^@:]+):[^@]+@/, '$1:******@'))
-    request({uri:url, method:'PUT', body:body, headers:h}, function (err, resp, body) {
+    request({uri:url, method:'PUT', body:body, headers:h()}, function (err, resp, body) {
       if (err) throw err;
       if (resp.statusCode !== 201) {
         throw new Error("Could not push document\nCode: " + resp.statusCode + "\n"+body);
       }
       app.doc._rev = JSON.parse(body).rev
       console.log('Finished push. '+app.doc._rev)
-      request({uri:url, headers:h}, function (err, resp, body) {
+      request({uri:url, headers:h()}, function (err, resp, body) {
         body = JSON.parse(body);
         app.doc._attachments = body._attachments;
         if (callback) callback()
@@ -309,7 +312,7 @@ function createApp (doc, url, cb) {
   
   if (url.slice(url.length - _id.length) !== _id) url += '/' + _id;
 
-  request({uri:url, headers:h}, function (err, resp, body) {
+  request({uri:url, headers:h()}, function (err, resp, body) {
     if (err) throw err;
     if (resp.statusCode == 404) app.current = {};
     else if (resp.statusCode !== 200) throw new Error("Failed to get doc\n"+body)
