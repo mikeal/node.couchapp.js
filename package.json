@@ -12,13 +12,14 @@
   ],
   "main": "./main",
   "dependencies": {
-    "watch": "~0.8.0",
-    "request": "*",
-    "http-proxy": "0.8.7",
+    "coffee-script": "*",
     "connect": "*",
+    "http-proxy": "0.8.7",
+    "mime": "^1.2.11",
     "nano": "*",
+    "request": "*",
     "url": "*",
-    "coffee-script": "*"
+    "watch": "~0.8.0"
   },
   "bin": {
     "couchapp": "./bin.js"

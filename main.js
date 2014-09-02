@@ -3,7 +3,7 @@ var path = require('path')
   , watch = require('watch')
   , request = require('request')
   , crypto = require('crypto')
-  , mimetypes = require('./mimetypes')
+  , mimetypes = require('mime')
   , spawn = require('child_process').spawn
   ;
 
