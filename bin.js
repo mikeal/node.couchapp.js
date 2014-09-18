@@ -19,15 +19,13 @@ function copytree (source, dest) {
           try {
             fs.mkdirSync(i.replace(source, dest), 0755)
           } catch(e) {
-            console.log('Could not create '+dest)
+            console.log('Could not create '+i.replace(source,dest))
           }
         } else {
-          fs.readFile(i, function (err, data) {
-            if (err) throw err;
-            fs.writeFile(i.replace(source, dest), data, function (err) {
-              if (err) throw err;
-            });
-          })
+          var stream = fs.createReadStream(i).pipe(fs.createWriteStream(i.replace(source, dest)));
+          stream.on("error", function (err) {
+              throw err;
+          });
         }
       })(i);
     }
@@ -35,15 +33,8 @@ function copytree (source, dest) {
 }
 
 function boiler (app) {
-  if (app) {
-    try { fs.mkdirSync(path.join(process.cwd(), app)) }
-    catch(e) {};
-  }
   app = app || '.'
-
   copytree(path.join(__dirname, 'boiler'), path.join(process.cwd(), app));
-
-
 }
 
 
