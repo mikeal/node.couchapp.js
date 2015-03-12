@@ -125,7 +125,7 @@ if (process.mainModule && process.mainModule.filename === __filename) {
     )
     process.exit();
   }
-  
+
   if (couch == undefined) {
     try {
       couch = JSON.parse(fs.readFileSync('.couchapp.json')).couch;
@@ -167,7 +167,7 @@ if (process.mainModule && process.mainModule.filename === __filename) {
         if (command == 'push') app.push()
         else if (command == 'sync') app.sync()
         else if (command == 'serve') serve(app);
-        
+
       })
     }
   }
@@ -227,6 +227,9 @@ function serve(app) {
   var connect = require('connect');
   var httpProxy = require('http-proxy'),
       connect   = require('connect'),
+      logger = require('morgan'),
+      serveStatic = require('serve-static'),
+      errorHandler = require('errorhandler'),
       connectCompiler;
   try{
       connectCompiler = require('connect-compiler');
@@ -242,8 +245,8 @@ function serve(app) {
     }
   });
   var app = connect()
-    .use(connect.logger('dev'))
-    .use(connect.static(staticDir));
+    .use(logger('dev'))
+    .use(serveStatic(staticDir));
   if(connectCompiler){
     console.log('Will compile assets with connect-assets.');
     var ignore = [];
@@ -265,7 +268,7 @@ function serve(app) {
       dest: tmpDir,
       ignore :  ignore,
     }))
-    .use(connect.static(tmpDir));
+    .use(serveStatic(tmpDir));
   }
   app.use(function(req, res, next) {
       for(var prefix in proxyPaths){
@@ -286,7 +289,7 @@ function serve(app) {
       res.setHeader('Content-Length', body.length);
       res.end(body);
      })
-    .use(connect.errorHandler())
+    .use(errorHandler())
     .listen(port);
   console.log("Serving couchapp at: http://0.0.0.0:" + port +"/");
 
@@ -315,4 +318,3 @@ function serve(app) {
 }
 
 exports.boilerDirectory = path.join(__dirname, 'boiler')
-
