@@ -141,17 +141,22 @@ if (process.mainModule && process.mainModule.filename === __filename) {
       }
     } else {
       onBeforePushSync();
+
+      //NOTE: im not sure about this... maybe we want to let the handler handle the error?
+      //  anyway - in this for it's completely backward compatible with the existing hooks API
+      var onAfterPushSyncWrap = function(err) { if (err) throw err; onAfterPushSync() } 
+
       for (i in apps) {
         //an immediately executed function is used so the loop counter variable is available
         //in createApp's callback function: multiple calls to push/sync are supported and
         //onAfterPushSync is supplied as the callback function on the last call
         (function keepLoopCounter(i) {
-          couchapp.createApp(require(abspath(apps[i])), couch, function (app) {
+          couchapp.createApp(require(abspath(apps[i])), function (app) {
             if (command == 'push') {
-              app.push(i == apps.length - 1 ? onAfterPushSync : null);
+              app.push(couch, i == apps.length - 1 ? onAfterPushSyncWrap : null);
             }
             else if (command == 'sync') {
-              app.sync(i == apps.length ? onAfterPushSync : null);
+              app.sync(couch, i == apps.length ? onAfterPushSyncWrap : null);
             }
           });
         })(i);
@@ -163,10 +168,10 @@ if (process.mainModule && process.mainModule.filename === __filename) {
     if (command == 'boiler') {
       boiler(app);
     } else {
-      couchapp.createApp(require(abspath(app)), couch, function (app) {
-        if (command == 'push') app.push()
-        else if (command == 'sync') app.sync()
-        else if (command == 'serve') serve(app);
+      couchapp.createApp(require(abspath(app)), function (app) {
+        if (command == 'push') app.push(couch)
+        else if (command == 'sync') app.sync(couch)
+        else if (command == 'serve') serve(app, couch);
 
       })
     }
@@ -175,7 +180,7 @@ if (process.mainModule && process.mainModule.filename === __filename) {
 }
 
 // Start a development web server on app
-function serve(app) {
+function serve(app, couch) {
   var url = require('url');
   var port = 3000,
       staticDir = 'attachments',

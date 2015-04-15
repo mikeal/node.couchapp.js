@@ -114,8 +114,10 @@ function copy (obj) {
 }
 
   
-function createApp (doc, url, cb) {
+function createApp (doc, cb) {
   var app = {doc:doc}
+    , url
+    ;
   
   app.fds = {};
   
@@ -138,7 +140,11 @@ function createApp (doc, url, cb) {
     app.doc.attachments_md5 = app.doc.attachments_md5 || {}
     app.doc._attachments = app.doc._attachments || {}
   }
-  
+  var reject = function(err,callback) {
+      if ('function' == typeof callback) return callback(err);
+      throw err;
+  }
+
   var push = function (callback) {
     console.log('Serializing.')
     var doc = copy(app.doc);
@@ -146,14 +152,14 @@ function createApp (doc, url, cb) {
     delete doc.__attachments;
     var body = JSON.stringify(doc)
     console.log('PUT '+url.replace(/^(https?:\/\/[^@:]+):[^@]+@/, '$1:******@'))
-    request({uri:url, method:'PUT', body:body, headers:h()}, function (err, resp, body) {
-      if (err) throw err;
+    request({uri:url, method:'PUT', body:body, headers:h}, function (err, resp, body) {
+      if (err) return reject(err,callback);
       if (resp.statusCode !== 201) {
-        throw new Error("Could not push document\nCode: " + resp.statusCode + "\n"+body);
+        return reject(new Error("Could not push document\nCode: " + resp.statusCode + "\n"+body),callback);
       }
       app.doc._rev = JSON.parse(body).rev
       console.log('Finished push. '+app.doc._rev)
-      request({uri:url, headers:h()}, function (err, resp, body) {
+      request({uri:url, headers:h}, function (err, resp, body) {
         body = JSON.parse(body);
         app.doc._attachments = body._attachments;
         if (callback) callback()
@@ -161,7 +167,7 @@ function createApp (doc, url, cb) {
     })
   }
   
-  app.push = function (callback) {
+  var walkAttachments = function (callback) {
     var revpos
       , pending_dirs = 0
       ;
@@ -176,10 +182,9 @@ function createApp (doc, url, cb) {
     revpos = app.doc._rev ? parseInt(app.doc._rev.slice(0,app.doc._rev.indexOf('-'))) : 0;
     
     var coffeeCompile;
-    var coffeeExt;
+    var coffeeExt = /\.(lit)?coffee$/;
     try{
       coffeeCompile = require('coffee-script');
-      coffeeExt = /\.(lit)?coffee$/;
     } catch(e){}
 
     app.doc.__attachments.forEach(function (att) {
@@ -229,9 +234,9 @@ function createApp (doc, url, cb) {
       })
     })
     if (!app.doc.__attachments || app.doc.__attachments.length == 0) push(callback);
-  }  
-  
-  app.sync = function (callback) {
+  }
+
+  app.sync = function (toUrl, callback) {
     // A few notes.
     //   File change events are stored in an array and bundled up in to one write call., 
     // this reduces the amount of unnecessary processing as we get a lof of change events.
@@ -241,7 +246,7 @@ function createApp (doc, url, cb) {
     // looks funny at the underlying files and even reading and opening fds to check on the file trigger
     // more events.
     
-    app.push(function () {
+    app.push(toUrl, function () {
       var changes = [];
       console.log('Watching files for changes...')
       app.doc.__attachments.forEach(function (att) {
@@ -308,17 +313,23 @@ function createApp (doc, url, cb) {
       setTimeout(check, 50)
     })
   }
-  var _id = doc.app ? doc.app._id : doc._id
   
-  if (url.slice(url.length - _id.length) !== _id) url += '/' + _id;
+  app.push = function(toUrl, cb) {
+      var _id = doc.app ? doc.app._id : doc._id
+      url = toUrl;
+      if (url.slice(url.length - _id.length) !== _id) url += '/' + _id;
 
-  request({uri:url, headers:h()}, function (err, resp, body) {
-    if (err) throw err;
-    if (resp.statusCode == 404) app.current = {};
-    else if (resp.statusCode !== 200) throw new Error("Failed to get doc\n"+body)
-    else app.current = JSON.parse(body)
-    cb(app)
-  })
+      request({uri:url, headers:h}, function (err, resp, body) {
+        if (err) throw err;
+        if (resp.statusCode == 404) app.current = {};
+        else if (resp.statusCode !== 200) return reject(new Error("Failed to get doc\n"+body));
+
+        else app.current = JSON.parse(body)
+        walkAttachments(cb)
+      })
+  }
+
+  cb(app);
 }
 
 exports.createApp = createApp
