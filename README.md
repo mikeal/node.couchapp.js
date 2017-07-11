@@ -1,5 +1,7 @@
 # Installation
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/mikeal/node.couchapp.js.svg)](https://greenkeeper.io/)
+
 Install node.
 
 Install npm.
