@@ -14,7 +14,7 @@
   "dependencies": {
     "coffee-script": "^1.8.0",
     "connect": "~3.3.4",
-    "morgan": "~1.5.1",
+    "morgan": "~1.9.1",
     "serve-static": "~1.9.1",
     "errorhandler": "~1.3.4",
     "http-proxy": "^1.3.0",
